@@ -3,6 +3,16 @@ provider "aws" {
   profile = "terraform"
 }
 
+variable "server_port" {
+  description = "The port that the server listens to for HTTP requests"
+  type = number
+}
+
+output "server_public_ip" {
+  value = aws_instance.my_server.public_ip
+  description = "The public IP address to access the web server"
+}
+
 # Create an Ubuntu 20.04 (Focal) VM
 resource "aws_instance" "my_server" {
   ami = "ami-0c43b23f011ba5061"
@@ -16,10 +26,11 @@ resource "aws_instance" "my_server" {
   # Terraform's heredoc syntax to create multi-line strings
   # This script will execute immediately after the server is provisioned
   # It creates a simple webserver listening on port 8080
+  # To use a variable in a heredoc or string, use the format ${var.variable_name_here}
   user_data = <<-EOF
     #!/bin/bash
     echo "Hello, World!" >> index.html
-    nohup busybox httpd -f -p 8080 &
+    nohup busybox httpd -f -p ${var.server_port} &
     EOF
 
   # Associate the security group defined below to this EC2 instance
@@ -35,8 +46,8 @@ resource "aws_security_group" "my_server_sg" {
   # Allow incoming traffic
   ingress {
     # from_port and to_port are used to specify a range of ports
-    from_port = 8080
-    to_port = 8080
+    from_port = var.server_port
+    to_port = var.server_port
 
     # The server wants to listen for HTTP requests, which are of course TCP
     protocol = "TCP"
