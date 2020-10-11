@@ -14,6 +14,6 @@ Check out the commit history to see
 
 ## TODO
 
-* [ ] Move variables to a `.tfvars` file
-* [ ] Move outputs to their own file
-* [ ] Add default values to variables
+* [x] Move variables to a `.tfvars` file
+* [x] Move outputs to their own file
+* [x] Add default values to variables

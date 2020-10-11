@@ -3,16 +3,6 @@ provider "aws" {
   profile = "terraform"
 }
 
-variable "server_port" {
-  description = "The port that the server listens to for HTTP requests"
-  type = number
-}
-
-output "alb_dns_name" {
-  value = aws_lb.my_load_balancer.dns_name
-  description = "The DNS name of the load balance in front of the application servers"
-}
-
 # Data sources are read-only data from the provider
 
 # Find the default VPC
@@ -78,7 +68,7 @@ resource "aws_autoscaling_group" "my_auto_scaling_group" {
   }
 }
 
-# By default AWS does not allow incoming/outgoing traffic on port 8080
+# By default AWS does not allow incoming/outgoing traffic on port 8080 (or whatever port you chose)
 # This configuration allows the server to accept requests
 resource "aws_security_group" "my_server_sg" {
   name = "terraform-example-security-group"
