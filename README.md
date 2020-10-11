@@ -10,9 +10,10 @@ Check out the commit history to see
 
 * Stage One: A lone simple webserver
 * Stage Two: A load-balanced, auto scaled group
+* Stage Three: Change backend from local to remote storage
 
 ## TODO
 
-* Move variables to a `.tfvars` file
-* Move outputs to their own file
-* Add default values to variables
+* [ ] Move variables to a `.tfvars` file
+* [ ] Move outputs to their own file
+* [ ] Add default values to variables
