@@ -8,11 +8,7 @@ Contains a small Terraform project for spinning up a simple web page, served fro
 
 Check out the commit history to see
 
-* Stage One: A lone simple webserver
-* Stage Two: A load-balanced, auto scaled group
-
-## TODO
-
-* Move variables to a `.tfvars` file
-* Move outputs to their own file
-* Add default values to variables
+* Step 1: A lone simple webserver
+* Step 2: A load-balanced, auto scaled group
+* Step 3: Use a remote backend (S3) for storing state
+* Step 4: Create a database
