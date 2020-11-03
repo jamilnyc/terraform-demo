@@ -57,6 +57,7 @@ resource "aws_dynamodb_table" "terraform_locks" {
 
 # Specify where you want to store your remote state
 terraform {
+  # NOTE: Variables are not supported in the backend block
   backend "s3" {
     profile = "terraform"
     bucket = "jamil-demo-terraform-state"
