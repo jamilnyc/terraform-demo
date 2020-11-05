@@ -4,7 +4,7 @@ provider "aws" {
 }
 
 module "database" {
-  source = "../../../modules/data-stores/mysql"
+  source = "../../../../modules/data-stores/mysql"
 
   db_name = "stagedb"
   db_username = "admin"

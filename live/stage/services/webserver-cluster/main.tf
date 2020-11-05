@@ -6,7 +6,7 @@ provider "aws" {
 # A module is just a directory of terraform files
 module "webserver_cluster" {
   # Basically all the *.tf code in the source directory into this file
-  source = "../../../modules/services/webserver-cluster"
+  source = "../../../../modules/services/webserver-cluster"
 
   # Provide values for all the variables defined in the module
   # This makes sure that names are specfic to their environment and you don't get collisions between stage and prod
