@@ -18,3 +18,22 @@ variable "db_remote_state_key" {
   description = "The path for the database's remote state in S3"
 }
 
+variable "instance_type" {
+  description = "The type of EC2 Instances to run (e.g., t2.micro)"
+  type = string
+}
+
+variable "min_size" {
+  description = "The minimum number of EC2 instances in the auto-scaling group"
+  type = number
+}
+
+variable "max_size" {
+  description = "The maximum number of EC2 instances in the auto-scaling group"
+  type = number
+}
+
+variable "environment_name" {
+  type = string
+  description = "The name of the environment for identifying purposes"
+}

@@ -1,8 +1,16 @@
 # Do not configure a provider in a module, that should be configured by the user of a module
 # because providers contain information about the accounts to use, etc.
 
-# Data sources are read-only data from the provider
+# Locals are like constants used throughout the module
+locals {
+  http_port = 80
+  any_port = 0
+  any_protocol = "-1"
+  tcp_protocol = "TCP"
+  all_ips = ["0.0.0.0/0"]
+}
 
+# Data sources are read-only data from the provider
 # Find the default VPC
 data "aws_vpc" "default_vpc" {
   default = true
@@ -18,7 +26,7 @@ data "aws_subnet_ids" "default_vpc_subnet_ids" {
 resource "aws_launch_configuration" "my_launch_cfg" {
   # Ubuntu 20.04
   image_id = "ami-0c43b23f011ba5061"
-  instance_type = "t2.micro"
+  instance_type = var.instance_type
 
   # Use the security group defined below to allow HTTP traffic on the defined port
   security_groups = [aws_security_group.my_server_sg.id]
@@ -51,8 +59,8 @@ resource "aws_autoscaling_group" "my_auto_scaling_group" {
   health_check_type = "ELB"
 
   # The number of instances to have at any given time
-  min_size = 2
-  max_size = 10
+  min_size = var.min_size
+  max_size = var.max_size
 
   # Tag each EC2 instance with this name
   tag {
@@ -69,16 +77,18 @@ resource "aws_security_group" "my_server_sg" {
   name = "${var.cluster_name}-instance"
 
   # Allow incoming traffic
+  # This is an example of an inline block
+  # It is preferred to use a separate resource as shown in "alb_sg"
   ingress {
     # from_port and to_port are used to specify a range of ports
     from_port = var.server_port
     to_port = var.server_port
 
     # The server wants to listen for HTTP requests, which are of course TCP
-    protocol = "TCP"
+    protocol = local.tcp_protocol
 
     # Allow traffic from all IP addresses
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = local.all_ips
   }
 }
 
@@ -94,7 +104,7 @@ resource "aws_lb" "my_load_balancer" {
 
 resource "aws_lb_listener" "http_listener" {
   load_balancer_arn = aws_lb.my_load_balancer.arn
-  port = 80
+  port = local.http_port
   protocol = "HTTP"
 
   # Return a 404 by default, when no listener rules are matched
@@ -102,7 +112,7 @@ resource "aws_lb_listener" "http_listener" {
     type = "fixed-response"
     fixed_response {
       content_type = "text/plain"
-      message_body = "404: page not found"
+      message_body = "404: This isn't the page you're looking for. Move along."
       status_code  = 404
     }
   }
@@ -112,24 +122,28 @@ resource "aws_lb_listener" "http_listener" {
 # So you need to create a security group and specify that the ALB allows incoming traffic on port 80
 # and also that outgoing traffic can be from any port
 resource "aws_security_group" "alb_sg" {
-  name = "${var.cluster_name}-alb"
+  name = "${var.cluster_name}-alb-security-group"
+}
 
-  # Allow incoming HTTP requests from anywhere
-  ingress {
-    # The range of ports to allow, just one in this case
-    from_port = 80
-    to_port = 80
-    protocol = "TCP"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+# Allow incoming HTTP requests from anywhere
+resource "aws_security_group_rule" "allow_http_inbound" {
+  type = "ingress"
+  security_group_id = aws_security_group.alb_sg.id
 
-  # Allow all outbound requests
-  egress {
-    from_port = 0
-    protocol = "-1"
-    to_port = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # The range of ports to allow, just one in this case
+  from_port = local.http_port
+  to_port = local.http_port
+  protocol = local.tcp_protocol
+  cidr_blocks = local.all_ips
+}
+
+resource "aws_security_group_rule" "allow_all_outbound" {
+  type = "egress"
+  security_group_id = aws_security_group.alb_sg.id
+  from_port = local.any_port
+  protocol = local.any_protocol
+  to_port = local.any_port
+  cidr_blocks = local.all_ips
 }
 
 # Target groups are groups of servers that requests should be routed to from the ALB
@@ -192,11 +206,13 @@ data "terraform_remote_state" "database" {
 # Read the script contents from the given filename and make the variables available
 # to be interpolated in that file
 data "template_file" "user_data" {
-  template = file("user-data.sh")
+  # Using path.module means load user-data.sh from the module directory instead of the CWD where terraform is being executed
+  template = file("${path.module}/user-data.sh")
 
   vars = {
     server_port = var.server_port
     db_address = data.terraform_remote_state.database.outputs.database_address
     db_port = data.terraform_remote_state.database.outputs.database_port
+    environment_name = var.environment_name
   }
 }
