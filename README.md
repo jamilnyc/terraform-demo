@@ -13,3 +13,7 @@ Check out the commit history to see
 * Step 3: Use a remote backend (S3) for storing state
 * Step 4: Create a database
 * Step 5: Create modules
+
+## TODO
+
+* [ ] Move modules to separate repositories and reference them via GitHub instead of via the local files system

@@ -6,6 +6,7 @@ provider "aws" {
 # A module is just a directory of terraform files
 module "webserver_cluster" {
   # Basically all the *.tf code in the source directory into this file
+  # This can also be a GitHub URL
   source = "../../../../modules/services/webserver-cluster"
 
   # Provide values for all the variables defined in the module
