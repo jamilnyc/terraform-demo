@@ -16,10 +16,19 @@ provider "aws" {
 resource "aws_sqs_queue" "q" {
   name = "MyQueueTerraform"
   visibility_timeout_seconds = 30
-  message_retention_seconds = (60 * 60 * 24 * 7)
+  message_retention_seconds = (60 * 60 * 24 * 4) # 4 days
   delay_seconds = 0
   max_message_size = 262144 # 256 KiB
+
+  # A higher time is longer polling, which would reduce costs
   receive_wait_time_seconds = 0
+
+  # Messages will be tried by the Lambda function maxReceiveCount times
+  # before the queue gives up on it and sends it to the Dead Letter Queue
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.dlq.arn
+    maxReceiveCount = 10
+  })
 }
 
 # Policy document for the queue, allowing the resource(s) with the matching ARN to send messages to it.
@@ -93,8 +102,8 @@ resource "aws_lambda_event_source_mapping" "lambda_trigger" {
   event_source_arn = aws_sqs_queue.q.arn
   function_name = aws_lambda_function.queue_lambda.arn
 
-  # Up to 5 messages can be sent at a time for batch processing to this function/
-  batch_size = 5
+  # Up to batch_size messages can be sent at a time for batch processing to this function/
+  batch_size = 1
   enabled = true
 }
 
