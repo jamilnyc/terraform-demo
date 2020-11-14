@@ -15,13 +15,16 @@ provider "aws" {
 # Create a basic SQS Queue
 resource "aws_sqs_queue" "q" {
   name = "MyQueueTerraform"
-  visibility_timeout_seconds = 30
+
+  # Time until message is retried after a failure
+  visibility_timeout_seconds = 120
+
   message_retention_seconds = (60 * 60 * 24 * 4) # 4 days
   delay_seconds = 0
   max_message_size = 262144 # 256 KiB
 
   # A higher time is longer polling, which would reduce costs
-  receive_wait_time_seconds = 0
+  receive_wait_time_seconds = 20
 
   # Messages will be tried by the Lambda function maxReceiveCount times
   # before the queue gives up on it and sends it to the Dead Letter Queue
