@@ -3,3 +3,12 @@ variable "user_names" {
   type = list(string)
   default = ["ash", "brock", "misty"]
 }
+
+variable "foods" {
+  type = map(string)
+  default = {
+    apple = "fruit"
+    carrot = "vegetable"
+    cheese = "dairy"
+  }
+}
