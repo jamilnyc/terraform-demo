@@ -81,6 +81,34 @@ resource "aws_autoscaling_group" "my_auto_scaling_group" {
   }
 }
 
+resource "aws_autoscaling_schedule" "scale_out_during_business_hours" {
+  # A count of 1 means create 1 resource (list of 1 element), while 0 means don't create the resource at all
+  # It's a hacky way of doing conditional resource creation
+  count = var.enable_autoscaling ? 1: 0
+  autoscaling_group_name = aws_autoscaling_group.my_auto_scaling_group.name
+  scheduled_action_name = "${var.cluster_name}-scale-out-during-business-hours"
+
+  # Increase to 10 instances at 9AM
+  min_size = 2
+  max_size = 10
+  desired_capacity = 10
+  recurrence = "0 9 * * *"
+
+}
+
+resource "aws_autoscaling_schedule" "scale_in_at_night" {
+  count = var.enable_autoscaling ? 1: 0
+
+  autoscaling_group_name = aws_autoscaling_group.my_auto_scaling_group.name
+  scheduled_action_name = "${var.cluster_name}-scale-in-at-night"
+
+  # Decrease to 2 instances at 5PM
+  min_size = 2
+  max_size = 10
+  desired_capacity = 2
+  recurrence = "0 17 * * *"
+}
+
 # By default AWS does not allow incoming/outgoing traffic on port 8080
 # This configuration allows the server to accept requests
 # This will be applied to all servers in the Auto scaling group
