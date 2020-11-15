@@ -255,3 +255,47 @@ data "template_file" "user_data" {
     environment_name = var.environment_name
   }
 }
+
+# Cloudwatch Alarm that goes off if the average CPU utilization in the cluster is more than 90%, for 5 min
+resource "aws_cloudwatch_metric_alarm" "high_cpu_utilization" {
+  alarm_name = "${var.cluster_name}-high-cpu-utilization"
+  namespace = "AWS/EC2"
+  metric_name = "CPUUtilization"
+
+  # dimensions are used to refine the metric that is being measured
+  # here we are filtering by all instances in the ASG
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.my_auto_scaling_group.name
+  }
+
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods = 1
+  period = 300
+  statistic = "Average"
+  threshold = 90
+  unit = "Percent"
+}
+
+# Alarm that goes off when the cluster is almost out of CPU credits
+resource "aws_cloudwatch_metric_alarm" "low_cpu_credit_balance" {
+  # CPU Credits only apply to tXXX type instances, so this alarm is only valid for them
+  # Other instance types would get stuck in the INSUFFICIENT_DATA state
+  # We check if the instance type begins wih "t" (string with precision of 1) and only then is this alarm resource created
+  count = format("%.1s", var.instance_type) == "t" ? 1 : 0
+
+  alarm_name = "${var.cluster_name}-low-cpu-credit-balance"
+  namespace = "AWS/EC2"
+  metric_name = "CPUCreditBalance"
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.my_auto_scaling_group.name
+  }
+
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods = 1
+  period = 300
+  statistic = "Minimum"
+  threshold = 10
+  unit = "Count"
+
+}

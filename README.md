@@ -13,6 +13,8 @@ Check out the commit history to see
 * Step 3: Use a remote backend (S3) for storing state
 * Step 4: Create a database
 * Step 5: Create modules
+* Tips: General language constructs
+* Step 6: Set up Cloudwatch alerts
 
 ## TODO
 
