@@ -37,3 +37,10 @@ variable "environment_name" {
   type = string
   description = "The name of the environment for identifying purposes"
 }
+
+variable "custom_tags" {
+  type = map(string)
+  description = "Custom tags to set on the Instances in the ASG"
+  default = {}
+}
+

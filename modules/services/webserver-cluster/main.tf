@@ -68,6 +68,17 @@ resource "aws_autoscaling_group" "my_auto_scaling_group" {
     propagate_at_launch = true
     value = "${var.cluster_name}-asg"
   }
+
+  dynamic "tag" {
+    for_each = var.custom_tags
+
+    # The body of the inline object (like the static tag defined above)
+    content {
+      key = tag.key
+      value = tag.value
+      propagate_at_launch = true
+    }
+  }
 }
 
 # By default AWS does not allow incoming/outgoing traffic on port 8080
