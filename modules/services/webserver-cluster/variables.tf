@@ -49,3 +49,9 @@ variable "enable_autoscaling" {
   type = bool
   default = false
 }
+
+variable "enable_new_user_data" {
+  type = bool
+  default = false
+  description = "If set to true, use the new User Data Script"
+}

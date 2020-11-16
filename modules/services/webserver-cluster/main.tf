@@ -32,7 +32,13 @@ resource "aws_launch_configuration" "my_launch_cfg" {
   security_groups = [aws_security_group.my_server_sg.id]
 
   # Script to run after each instance is provisioned
-  user_data = data.template_file.user_data.rendered
+  # Which ever data source was actually created (as an array of either 1 or 0 elements) will be used
+
+  user_data = (
+    length(data.template_file.user_data[*]) > 0
+      ? data.template_file.user_data[0].rendered
+      : data.template_file.user_data_new[0].rendered
+  )
 
   # Required when using a launch configuration with an auto scaling group.
   # https://www.terraform.io/docs/providers/aws/r/launch_configuration.html
@@ -245,6 +251,7 @@ data "terraform_remote_state" "database" {
 # Read the script contents from the given filename and make the variables available
 # to be interpolated in that file
 data "template_file" "user_data" {
+  count = var.enable_new_user_data ? 0: 1
   # Using path.module means load user-data.sh from the module directory instead of the CWD where terraform is being executed
   template = file("${path.module}/user-data.sh")
 
@@ -253,6 +260,16 @@ data "template_file" "user_data" {
     db_address = data.terraform_remote_state.database.outputs.database_address
     db_port = data.terraform_remote_state.database.outputs.database_port
     environment_name = var.environment_name
+  }
+}
+
+data "template_file" "user_data_new" {
+  # Only create this file object if the field is set, otherwise, we'll use the original
+  count = var.enable_new_user_data ? 1 : 0
+  template = file("${path.module}/user-data-new.sh")
+
+  vars = {
+    server_port = var.server_port
   }
 }
 
